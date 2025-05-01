@@ -1,0 +1,13 @@
+<div class="nav-bar">
+    <router-link to="/" :class="{ active: currentPage === 'home' }">Home</router-link>
+    <router-link to="/communities" :class="{ active: currentPage === 'communities' }">Communities</router-link>
+    <router-link to="/messages" :class="{ active: currentPage === 'messages' }">Messages</router-link>
+    <router-link to="/profile" :class="{ active: currentPage === 'profile' }">Profile</router-link>
+    <span v-if="$graffitiSession.value">
+      Logged in as {{ $graffitiSession.value.actor }}
+      <button @click="$graffiti.logout($graffitiSession.value)">
+          Log out
+      </button>
+  </span>
+
+  </div>

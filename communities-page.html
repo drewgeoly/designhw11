@@ -1,0 +1,31 @@
+<div>
+  <nav-bar current-page="communities"></nav-bar>
+  <graffiti-discover
+    v-slot="{ objects: communityObjects }"
+    :channels="['designftw']"
+    :schema="communitySchema"
+  >
+    <div class="content">
+      <community-sidebar 
+        ref="communitySidebar"
+        :all-communities="processedCommunities(communityObjects)"
+        :joined-channels="joinedChannels"
+        :selected-community="selectedCommunity" 
+        :loading="loading" 
+        :creating="creating" 
+        @select-community="enterCommunity"
+        @create-community="createCommunity"
+        @join-community="joinCommunity"
+        @leave-community="leaveCommunity"> 
+      </community-sidebar>
+      
+      <main>
+        <chat-view
+          :channel="selectedCommunity ? { ...selectedCommunity, isCommunity: true } : null"
+          @channel-renamed="handleChannelRenamed"
+
+        ></chat-view>
+      </main>
+    </div>
+  </graffiti-discover>
+</div>

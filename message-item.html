@@ -1,0 +1,20 @@
+<li class="message" :class="isMine ? 'you' : 'them'">
+  <template v-if="editingId === message.url">
+    <input v-model="localEditText" :disabled="sending"/>
+    <button @click="saveEdit" :disabled="sending">Save</button>
+    <button @click="cancelEdit" :disabled="sending">Cancel</button>
+  </template>
+  <template v-else>
+    <div class="message-content">{{ message.value.content }}</div>
+    <!-- new info and timestamp -->
+    <div class="message-info">
+      <span class="sender-name">{{ message.value.senderName || message.value.publishedBy || 'Unknown' }}</span>
+      <span class="message-time">{{ formatTime(message.value.published) }}</span>
+    </div>
+    <!-- Only show edit/delete buttons when in edit mode AND the message is mine -->
+    <div v-if="editMode && isMine" class="message-actions">
+      <button @click="startEdit" :disabled="loading">Edit</button>
+      <button @click="deleteMsg" :disabled="loading">Delete</button>
+    </div>
+  </template>
+</li>

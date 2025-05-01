@@ -1,0 +1,29 @@
+<div>
+  <nav-bar current-page="messages"></nav-bar>
+  <div class="content">
+    <graffiti-discover
+      v-slot="{ objects: threadObjects }"
+      :channels="[$graffitiSession.value?.actor]"
+      :schema="threadSchema"
+    >
+    <!-- sidebar is listening for any interactions -->
+      <direct-message-sidebar 
+        :threads="formatThreads(threadObjects)"
+        :selected-thread="selectedThread"
+        :loading="loading"
+        @select-thread="selectThread"
+        @create-thread="createThread"
+      ></direct-message-sidebar>
+    </graffiti-discover>
+    <main>
+      <chat-view
+        v-if="selectedThread"
+        :channel="{
+          channel: selectedThread.channel,
+          name:    selectedThread.name,
+          isCommunity: false
+        }"
+      ></chat-view>
+    </main>
+  </div>
+</div>

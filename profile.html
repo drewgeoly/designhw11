@@ -1,0 +1,92 @@
+<div>
+    <nav-bar current-page="profile"></nav-bar>
+    
+    <div class="content">
+      <div class="profile-container">
+        <h1>Your Profile</h1>
+        
+        <div v-if="loading" class="loading-indicator">
+          <div class="loading-spinner"></div>
+          <div>Loading your profile...</div>
+        </div>
+        
+        <div v-else>
+          <div v-if="!editMode" class="profile-view">
+            <div class="profile-header">
+              <h2>{{ user.name }}</h2>
+              <button @click="editMode = true" class="edit-button">Edit Profile</button>
+            </div>
+            
+            <div v-if="!hasProfile" class="no-profile-message">
+              <p>You haven't set up your profile yet. Click the Edit button to get started!</p>
+            </div>
+            
+            <div v-else class="profile-info">
+              <div class="info-item" v-if="user.pronouns">
+                <div class="info-label">Pronouns:</div>
+                <div class="info-content">{{ user.pronouns }}</div>
+              </div>
+              
+              <div class="info-item" v-if="user.bio">
+                <div class="info-label">Bio:</div>
+                <div class="info-content bio-content">{{ user.bio }}</div>
+              </div>
+              
+              <div class="info-item" v-if="user.status">
+                <div class="info-label">Status:</div>
+                <div class="info-content">{{ user.status }}</div>
+              </div>
+              
+              
+              <div class="info-item">
+                <div class="info-label">Profile Visibility:</div>
+                <div class="info-content">{{ user.isPublic ? 'Public' : 'Private' }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="profile-edit">
+            <form @submit.prevent="saveProfile" class="profile-form">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" v-model="user.name" required/>
+              </div>
+              
+              <div class="field">
+                <label for="pronouns">Pronouns</label>
+                <input id="pronouns" v-model="user.pronouns" required/>
+              </div>
+              
+              <div class="field">
+                <label for="bio">Bio</label>
+                <textarea id="bio" v-model="user.bio" required></textarea>
+              </div>
+              
+              <div class="field">
+                <label for="status">Status</label>
+                <input id="status" v-model="user.status" placeholder="e.g. psetting at STUD" />
+              </div>
+              
+              <div class="field">
+                <label for="interests">Interests</label>
+                <input id="interests" v-model="user.interests" placeholder="e.g. coding, music, etc." />
+              </div>
+              
+              <div class="field checkbox-field">
+                <label>
+                  <input type="checkbox" v-model="user.isPublic"/> 
+                  Make my profile public
+                </label>
+                <small v-if="!user.isPublic" class="privacy-note">Only you can see your communities and info</small>
+              </div>
+              
+              <div class="form-buttons">
+                <button type="submit" class="save-button">Save Profile</button>
+                <button type="button" @click="cancelEdit" class="cancel-button">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,13 @@
+<div class="sidebar">
+    <button @click="create" :disabled="loading">New Message</button>
+    <ul>
+      <li
+        v-for="thread in threads"
+        :key="thread.channel"
+        :class="{ active: selectedThread && thread.channel === selectedThread.channel }"
+        @click="select(thread)"
+      >
+        {{ thread.name }}
+      </li>
+    </ul>
+  </div>

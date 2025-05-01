@@ -1,0 +1,60 @@
+<aside class="community-sidebar">
+  <h3>Communities</h3>
+  
+  <form @submit.prevent="createCommunity">
+    <input 
+      v-model="newCommunityName" 
+      placeholder="New community name" 
+      :disabled="loading" 
+    />
+    <button :disabled="loading">
+      {{ (loading && creating) ? 'Creating...' : 'Create' }}
+    </button>
+  </form>
+  
+  <h4>Your Communities</h4>
+  <ul class="comms">
+    <li v-for="community in joinedCommunities" :key="community.channel">
+      <span v-if="isSelected(community)" class="selected">
+        <button @click="selectCommunity(community)" >{{ community.name }}</button>
+        <button @click="leaveCommunity(community)" class="leave-btn" :disabled="loading">Leave</button>
+      </span>
+      <span v-else>
+        <button @click="selectCommunity(community)">{{ community.name }}</button>
+        <button @click="leaveCommunity(community)" class="leave-btn" :disabled="loading">Leave</button>
+      </span>
+    </li>
+    <li v-if="joinedCommunities.length === 0">
+      <em>You haven't joined any communities yet</em>
+    </li>
+  </ul>
+  
+  <!-- Discover communities -->
+  <h4>Discover Communities</h4>
+  <ul class="comms">
+    <li v-for="community in discoverableCommunities" :key="community.channel">
+      <button 
+        @click="joinCommunity(community)" 
+        :disabled="loading"
+      >
+        {{ community.name }}
+      </button>
+    </li>
+    <li v-if="discoverableCommunities.length === 0">
+      <em>No communities to discover</em>
+    </li>
+  </ul>
+  
+  <!-- Premade communities section DECIDED TO REMOVE THIS, NOT INTUITIVE
+  <h4 v-if="availablePremadeCommunities.length > 0">Join a Premade Community</h4>
+  <ul v-if="availablePremadeCommunities.length > 0" class="comms">
+    <li v-for="community in availablePremadeCommunities" :key="community.channel">
+      <button 
+        @click="joinCommunity(community)" 
+        :disabled="loading"
+      >
+        {{ community.name }}
+      </button>
+    </li>
+  </ul> -->
+</aside>

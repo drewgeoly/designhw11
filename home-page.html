@@ -1,0 +1,21 @@
+
+<div class="welcome-page">
+  <div class="welcome-container">
+    <h1>Welcome to HomeBase Chat App</h1>
+    <p>Connect with communities and chat with friends in real-time.</p>
+    
+    <div v-if="!$graffitiSession.value" class="login-container">
+      <button class="login-button" @click="$graffiti.login(actor)">
+        Log In to Start Chatting
+      </button>
+    </div>
+    <div v-else class="navigation-buttons">
+      <router-link to="/communities" class="nav-button">Browse Communities</router-link>
+      <router-link to="/messages" class="nav-button">Direct Messages</router-link>
+      <router-link to="/profile" class="nav-button">Profile</router-link>
+      <button class="logout-button" @click="$graffiti.logout($graffitiSession.value)">
+        Log Out
+      </button>
+    </div>
+  </div>
+</div>

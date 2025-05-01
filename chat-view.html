@@ -1,0 +1,60 @@
+<div class="chat-window">
+    <div v-if="!channel" class="empty-state">
+      <p>Select or create a channel to start chatting.</p>
+    </div>
+    
+    <div v-else>
+      <!-- Channel header with rename option -->
+      <div class="channel-header">
+        <h1>{{ channelNameDisplay }}</h1>
+        
+        <div class="channel-actions">
+          
+          <button @click="toggleEditMode" class="mode-toggle">
+            {{ editMode ? 'Done' : 'Edit' }}
+          </button>
+          
+          <!-- Rename option, i will implement this next for only admins of the community! -->
+          <!-- <div v-if="showRenameOption">
+            <button @click="renaming = !renaming">
+              {{ renaming ? 'Cancel' : 'Rename' }}
+            </button>
+            <div v-if="renaming" class="rename-form">
+              <input v-model="renameText" placeholder="New name"/>
+              <button @click="applyRename()">Save</button>
+            </div>
+          </div> -->
+        </div>
+      </div>
+      
+      <div class="msgs">
+        <graffiti-discover
+          v-slot="{ objects: messageObjects }"
+          :channels="[channelId]"
+          :schema="messageSchema"
+        >
+          <ul class="msgs">
+            <message-item
+              v-for="message in messageObjects"
+              :key="message.url"
+              :message="message"
+              :is-mine="isMine(message)"
+              :edit-mode="editMode"
+              :editing-id="editingId"
+              :edit-text="editText"
+              @start-edit="startEdit"
+              @save-edit="applyEdit"
+              @cancel-edit="cancelEdit"
+              @delete-message="deleteMessage"
+            ></message-item>
+          </ul>
+        </graffiti-discover>
+      </div>
+      <!-- Message input form -->
+      <form @submit.prevent="sendMessage($graffitiSession.value)">
+        <input v-model="myMessage" placeholder="Type a message…" :disabled="sending"/>
+        <button :disabled="sending">{{ sending ? 'Sending...' : 'Send' }}</button>
+      </form>
+      <div v-if="sending" class="loading-indicator">Sending message...</div>
+    </div>
+  </div>
