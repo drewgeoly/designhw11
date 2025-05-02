@@ -10,8 +10,8 @@ export async function Profile() {
           name: "", pronouns: "", bio: "", status: "", interests: "", isPublic: true,
         },
         originalUser: null,
-        editMode:    false,
-        loading:     true,
+        editMode:false,
+        loading:  true,
         hasProfile:  false,
       };
     },
@@ -58,7 +58,7 @@ export async function Profile() {
                 (b.value.published || b.published) -
                 (a.value.published || a.published)
             )[0];
-            this.user         = { ...latest.value };
+            this.user = { ...latest.value };
             this.originalUser = JSON.parse(JSON.stringify(this.user));
             this.hasProfile   = true;
           }
@@ -77,24 +77,25 @@ export async function Profile() {
 
           const actor = await session.actor;
           const vals = {
-            name:      this.user.name,
-            pronouns:  this.user.pronouns,
-            bio:       this.user.bio,
-            status:    this.user.status,
+            name:this.user.name,
+            pronouns: this.user.pronouns,
+            bio: this.user.bio,
+            status: this.user.status,
             describes: actor,
             published: Date.now(),
+            generator: "https://drewgeoly.github.io/designhw11/",
           };
           const profileObj = {
-            value:    vals,
-            channels: [actor],     // store on your personal channel
-            allowed:  this.user.isPublic ? ["public"] : undefined,
+            value: vals,
+            channels: [actor, "designftw-2025-studio2"],     // store on your personal channel
+            allowed:  [],
           };
 
           await this.$graffiti.put(profileObj, session);
 
           this.originalUser = JSON.parse(JSON.stringify(this.user));
-          this.hasProfile   = true;
-          this.editMode     = false;
+          this.hasProfile  = true;
+          this.editMode = false;
           alert("Profile saved successfully!");
         } finally {
           this.loading = false;
