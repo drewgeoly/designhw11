@@ -87,8 +87,7 @@ export async function Profile() {
           };
           const profileObj = {
             value: vals,
-            channels: [actor, "designftw-2025-studio2"],     // store on your personal channel
-            allowed:  [],
+            channels: [actor, "designftw-2025-studio2"],     // store on your personal channel,
           };
 
           await this.$graffiti.put(profileObj, session);
