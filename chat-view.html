@@ -31,11 +31,12 @@
         <graffiti-discover
           v-slot="{ objects: messageObjects }"
           :channels="[channelId]"
+          autopoll
           :schema="messageSchema"
         >
           <ul class="msgs">
             <message-item
-              v-for="message in messageObjects"
+              v-for="message in sortedMessages(messageObjects)"
               :key="message.url"
               :message="message"
               :is-mine="isMine(message)"
