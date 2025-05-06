@@ -292,7 +292,7 @@ export async function CommunitiesPage() {
         this.loading = true;
         
         try {
-          await this.delay(1000);
+          // await this.delay(1000);
           this.joinedChannels.add(community.channel);
           
           this.enterCommunity(community);
@@ -310,7 +310,7 @@ export async function CommunitiesPage() {
         this.loading = true;
         
         try {
-          await this.delay(1000);
+          // await this.delay(1000);
           this.joinedChannels.delete(community.channel);
           
           if (this.selectedCommunity && this.selectedCommunity.channel === community.channel) {

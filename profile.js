@@ -7,7 +7,7 @@ export async function Profile() {
     data() {
       return {
         user: {
-          name: "", pronouns: "", bio: "", status: "", interests: "", isPublic: true,
+          name: "", username: '', pronouns: "", bio: "", status: "", interests: "", isPublic: true, 
         },
         originalUser: null,
         editMode:false,
@@ -78,6 +78,7 @@ export async function Profile() {
           const actor = await session.actor;
           const vals = {
             name:this.user.name,
+            username: this.user.username,
             pronouns: this.user.pronouns,
             bio: this.user.bio,
             status: this.user.status,
@@ -85,12 +86,45 @@ export async function Profile() {
             published: Date.now(),
             generator: "https://drewgeoly.github.io/designhw11/",
           };
+
           const profileObj = {
             value: vals,
             channels: [actor, "designftw-2025-studio2"],     // store on your personal channel,
           };
 
+          const usernameSchema = {
+            type: "object",
+            properties: {
+              value: {
+                type: "object",
+                properties: {
+                  type: { const: "username" },
+                  username: { type: "string" },
+                  actor: { type: "string" }
+              },
+                required: ["type", "username", "actor"]
+              }
+            }
+          };
+          for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+            if (object.value.username === this.user.username) {
+              alert("Username already exists. Please choose a different one.");
+              return;
+            }
+          }
+
           await this.$graffiti.put(profileObj, session);
+          await this.$graffiti.put({
+            value: {
+              type: "username",
+              username: this.user.username,
+              actor: actor,
+            },
+            channels: ["dgeolyUsernames"],
+          }, session); 
+          
+          // later need to delete old usernames of users after they change their username
+        
 
           this.originalUser = JSON.parse(JSON.stringify(this.user));
           this.hasProfile  = true;

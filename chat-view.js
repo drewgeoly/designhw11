@@ -59,6 +59,7 @@ export async function ChatView() {
       sortedMessages(messages) {
         // Sort messages by time sent to order properly
         if (!messages || !messages.length) return [];
+
         return [...messages].sort((a, b) => a.value.published - b.value.published);
       },
       
@@ -70,8 +71,41 @@ export async function ChatView() {
         }
       },
       
+      async checkUsernameSet() {
+        const schema = {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                username: { type: "string" },
+                actor: { type: "string" }
+            },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
+        const actor = this.$graffitiSession.value?.actor;
+        const usernames = this.$graffiti.discover(["dgeolyUsernames"], schema);
+        
+        for await (const { object } of usernames) {
+          if (object.value.actor === actor) {
+            this.username = object.value.username;
+            return true;
+          }
+        }
+        return false;
+      },
+      
+      
       async sendMessage(session) {
         if (!this.myMessage.trim() || !this.channelId) {
+          return;
+        }
+        const hasUsername = await this.checkUsernameSet();
+        if (!hasUsername) {
+          alert("You must create a profile and username before messaging.");
           return;
         }
         
@@ -79,7 +113,7 @@ export async function ChatView() {
         const me = session.actor || session.id;
         
         try {
-          await this.delay(1000);
+          // await this.delay(1000);
           await this.$graffiti.put(
             {
               value: {
@@ -87,6 +121,7 @@ export async function ChatView() {
                 content: this.myMessage,
                 published: Date.now(),
                 publishedBy: me,
+                senderName : await this.getUsernameFromActor(me),
               },
               channels: [this.channelId],
             },
@@ -171,6 +206,31 @@ export async function ChatView() {
         } finally {
           this.renaming = false;
         }
+
+      },
+      async getUsernameFromActor(actorId) {
+        if (!actorId){
+          return actorId;
+        }
+        const usernameSchema = {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                actor: { const: actorId }
+              },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
+        
+        for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+          return object.value.username;
+        }
+        
+        return actorId; // use actor id if i cant find
       },
       
       // For message styling

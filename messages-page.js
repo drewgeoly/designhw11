@@ -55,17 +55,70 @@ export async function MessagesPage() {
       );
     },
     methods: {
-      formatThreads(threadObjects) {
+      async formatThreads(threadObjects) {
         if (!threadObjects || !threadObjects.length || !this.$graffitiSession.value) {
           return [];
         }
         
         const actor = this.$graffitiSession.value.actor;
-        return threadObjects.map(obj => ({
-          channel: obj.value.channel,
-          name: obj.value.participants.find(p => p !== actor),
-          isCommunity: false
-        }));
+        const formattedThreads = [];
+
+        for (const thread of threadObjects) {
+          const peerActorId = obj.value.participants.find(p => p !== actor);
+          let peerUsername = peerActorId;
+
+          const usernameSchema = {
+            type: "object",
+            properties: {
+              value: {
+                type: "object",
+                properties: {
+                  type: { const: "username" },
+                  // username: { type: "string" },
+                  actor: { const: peerActorId }
+                },
+                required: ["type", "username", "actor"]
+              }
+            }
+          }
+          for await (const { obj1 } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+            peerUsername = obj1.value.username;
+            break;
+          }
+          formattedThreads.push({
+            channel: thread.value.channel,
+            name: peerUsername,
+            ifCommunity: false
+          });
+
+        }
+        return formattedThreads;
+      },
+      async checkUsernameSet() {
+        const schema = {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                username: { type: "string" },
+                actor: { type: "string" }
+            },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
+        const actor = this.$graffitiSession.value?.actor;
+        const usernames = this.$graffiti.discover(["dgeolyUsernames"], schema);
+        
+        for await (const { object } of usernames) {
+          if (object.value.actor === actor) {
+            this.username = object.value.username;
+            return true;
+          }
+        }
+        return false;
       },
       
       async createThread(peerId) {
@@ -73,10 +126,44 @@ export async function MessagesPage() {
         try {
           const session = this.$graffitiSession.value;
           const actor = await session.actor;
+          const usernameSchema = {
+            type: "object",
+            properties: {
+              value: {
+                type: "object",
+                properties: {
+                  type: { const: "username" },
+                  username: { const: peerId },
+                  actor: { type: "string" }
+              },
+                required: ["type", "username", "actor"]
+              }
+            }
+          };
+
+          // changing this to use usernames instead of actors
+          const hasUsername = await this.checkUsernameSet();
+          if (!hasUsername) {
+            alert("You must create a profile and username before messaging.");
+            return;
+          }
+
+          // check if the peerId has a profile
+          let peerActorId = false;
+          for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+            if (object.value.username === peerId) {
+              peerActorId = object.value.actor;
+              break;
+            }
+          }
+          if (!peerActorId) {
+            alert("The user you are trying to message does not have a profile. Please ask them to create one.");
+            return;
+          }
+
+          if (!peerId || peerActorId === actor) return;
           
-          if (!peerId || peerId === actor) return;
-          
-          const participants = [actor, peerId].sort();
+          const participants = [actor, peerActorId].sort();
           const channelId = participants.join("-");
           
           await this.$graffiti.put(
@@ -86,7 +173,7 @@ export async function MessagesPage() {
                 channel: channelId,
                 participants: participants
               },
-              channels: [actor, peerId]
+              channels: [actor, peerActorId]
             },
             session
           );
