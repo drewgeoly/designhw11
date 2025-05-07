@@ -7,23 +7,35 @@ export async function Profile() {
     data() {
       return {
         user: {
-          name: "", username: '', pronouns: "", bio: "", status: "", interests: "", isPublic: true, 
+          name: "", 
+          username: "", 
+          pronouns: "", 
+          bio: "", 
+          status: "", 
+          interests: "", 
+          isPublic: true, 
         },
         originalUser: null,
-        editMode:false,
-        loading:  true,
-        hasProfile:  false,
+        editMode: false,
+        loading: true,
+        hasProfile: false,
+        oldUsername: "", // similar to originaluser
       };
     },
     components: { 
         NavBar: defineAsyncComponent(NavBar),
-     },
+    },
     mounted() {
       if (this.$graffitiSession.value) this.loadProfile();
       this.$watch(
         () => this.$graffitiSession.value,
-        (newSess) => { if (newSess) {this.loadProfile();}
-        else if (!newSess) { this.$router.push('/'); }}
+        (newSess) => { 
+          if (newSess) {
+            this.loadProfile();
+          } else if (!newSess) { 
+            this.$router.push('/'); 
+          }
+        }
       );
     },
     methods: {
@@ -52,21 +64,99 @@ export async function Profile() {
           for await (const { object } of this.$graffiti.discover([actor], schema, session)) {
             objs.push(object);
           }
+          const usernameSchema = {
+            type: "object",
+            properties: {
+              value: {
+                type: "object",
+                properties: {
+                  type: { const: "username" },
+                  actor: { const: actor }
+                },
+                required: ["type", "username", "actor"]
+              }
+            }
+          };
+          
+          let currentUsername = "";
+          for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+            currentUsername = object.value.username;
+            break; 
+          }
+          
           if (objs.length) {
             const latest = objs.sort(
               (a, b) =>
                 (b.value.published || b.published) -
                 (a.value.published || a.published)
             )[0];
+            
             this.user = { ...latest.value };
+            if (currentUsername) {
+              this.user.username = currentUsername;
+            }
+            this.oldUsername = currentUsername; 
             this.originalUser = JSON.parse(JSON.stringify(this.user));
-            this.hasProfile   = true;
+            this.hasProfile = true;
+          } else if (currentUsername) {
+            this.user.username = currentUsername;
+            this.oldUsername = currentUsername;
+            this.hasProfile = false;
           }
         } catch (err) {
           console.error("Error loading profile:", err);
         } finally {
           this.loading = false;
         }
+      },
+
+      async isUsernameAvailable(username) {
+        if (username === this.oldUsername) {
+          return true;
+        }
+        
+        const usernameSchema = {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                username: { type: "string" },
+              },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
+        
+        for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+          if (object.value.username === username) {
+            return false;
+          }
+        }
+        return true;
+      },
+      
+      async findUsernameObject(actor, username) {
+        const usernameSchema = {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                actor: { const: actor }
+              },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
+        
+        for await (const { id, object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
+          return { id, object };
+        }
+        
+        return null;
       },
 
       async saveProfile() {
@@ -76,12 +166,22 @@ export async function Profile() {
           if (!session) throw new Error("Not logged in");
 
           const actor = await session.actor;
+          
+          //first check if username is available
+          if (!(await this.isUsernameAvailable(this.user.username))) {
+            alert("Username already exists. Please choose a different one.");
+            this.loading = false;
+            return;
+          }
+          
           const vals = {
-            name:this.user.name,
+            name: this.user.name,
             username: this.user.username,
             pronouns: this.user.pronouns,
             bio: this.user.bio,
             status: this.user.status,
+            interests: this.user.interests,
+            isPublic: this.user.isPublic,
             describes: actor,
             published: Date.now(),
             generator: "https://drewgeoly.github.io/designhw11/",
@@ -89,47 +189,45 @@ export async function Profile() {
 
           const profileObj = {
             value: vals,
-            channels: [actor, "designftw-2025-studio2"],     // store on your personal channel,
+            channels: [actor, "designftw-2025-studio2"],
           };
-
-          const usernameSchema = {
-            type: "object",
-            properties: {
-              value: {
-                type: "object",
-                properties: {
-                  type: { const: "username" },
-                  username: { type: "string" },
-                  actor: { type: "string" }
-              },
-                required: ["type", "username", "actor"]
-              }
-            }
-          };
-          for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
-            if (object.value.username === this.user.username) {
-              alert("Username already exists. Please choose a different one.");
-              return;
-            }
-          }
-
           await this.$graffiti.put(profileObj, session);
-          await this.$graffiti.put({
-            value: {
-              type: "username",
-              username: this.user.username,
-              actor: actor,
-            },
-            channels: ["dgeolyUsernames"],
-          }, session); 
+          const existingUsername = await this.findUsernameObject(actor);
           
-          // later need to delete old usernames of users after they change their username
-        
-
+          if (existingUsername) {
+            if (this.oldUsername !== this.user.username) {
+              //update username stuff
+              await this.$graffiti.patch(
+                {value: [
+                    {
+                      op: "replace",
+                      path: "/username",
+                      value: this.user.username
+                    }
+                  ]
+                },
+                existingUsername.id,
+                session
+              );
+            }
+          } else {
+            await this.$graffiti.put({
+              value: {
+                type: "username",
+                username: this.user.username,
+                actor: actor,
+              },
+              channels: ["dgeolyUsernames"],
+            }, session);
+          }
+          
+          this.oldUsername = this.user.username;
           this.originalUser = JSON.parse(JSON.stringify(this.user));
-          this.hasProfile  = true;
+          this.hasProfile = true;
           this.editMode = false;
           alert("Profile saved successfully!");
+        } catch (error) {
+          console.error("bruh not working")
         } finally {
           this.loading = false;
         }

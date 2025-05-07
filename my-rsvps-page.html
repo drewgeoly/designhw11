@@ -1,0 +1,85 @@
+<div>
+    <nav-bar current-page="my-rsvps"></nav-bar>
+    <div class="content">
+      <div class="my-rsvps-container">
+        <h1>My RSVPs</h1>
+        
+        <div v-if="loading" class="loading-indicator">
+          <div class="loading-spinner"></div>
+          <p>Loading your RSVPs...</p>
+        </div>
+        
+        <div v-else-if="rsvpEvents.length === 0" class="no-rsvps">
+          <p>You haven't RSVP'd to any events yet.</p>
+          <router-link to="/communities" class="back-button">Go to Communities</router-link>
+        </div>
+        
+        <div v-else>
+          <!-- event details modal -->
+          <div v-if="selectedEvent" class="event-details-modal">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2>{{ selectedEvent.eventData.title }}</h2>
+                <button @click="closeEventDetails" class="close-button">×</button>
+              </div>
+              
+              <div class="modal-body">
+                <div class="event-info">
+                  <p><strong>Date:</strong> {{ formatDate(selectedEvent.eventData.date) }}</p>
+                  <p><strong>Time:</strong> {{ selectedEvent.eventData.time }}</p>
+                  <p><strong>Location:</strong> {{ selectedEvent.eventData.location }}</p>
+                  <p><strong>Description:</strong> {{ selectedEvent.eventData.description }}</p>
+                </div>
+                
+                <div class="attendees-section">
+                  <h3>Attendees ({{ selectedEventAttendees.length }} / {{ selectedEvent.eventData.maxAttendees }})</h3>
+                  <ul class="attendees-list">
+                    <li v-for="attendee in selectedEventAttendees" :key="attendee.actor">
+                      {{ attendee.username }}
+                    </li>
+                    <li v-if="selectedEventAttendees.length === 0">No one has RSVP'd yet</li>
+                  </ul>
+                </div>
+                
+                <button @click="cancelRsvp(selectedEvent)" class="cancel-rsvp-button">
+                  Cancel RSVP
+                </button>
+              </div>
+            </div>
+          </div>
+          <div v-if="upcomingEvents.length > 0" class="rsvp-section">
+            <h2>Upcoming Events</h2>
+            <div class="rsvp-events-list">
+              <div 
+                v-for="event in upcomingEvents" 
+                :key="event.eventId" 
+                class="rsvp-event-card"
+                @click="selectEvent(event)"
+              >
+                <h3>{{ event.eventData.title }}</h3>
+                <p><strong>Date:</strong> {{ formatDate(event.eventData.date) }}</p>
+                <p><strong>Time:</strong> {{ event.eventData.time }}</p>
+                <p><strong>Location:</strong> {{ event.eventData.location }}</p>
+              </div>
+            </div>
+          </div>
+          <div v-if="pastEvents.length > 0" class="rsvp-section">
+            <h2>Past Events</h2>
+            <div class="rsvp-events-list past-events">
+              <div 
+                v-for="event in pastEvents" 
+                :key="event.eventId" 
+                class="rsvp-event-card past"
+                @click="selectEvent(event)"
+              >
+                <h3>{{ event.eventData.title }}</h3>
+                <p><strong>Date:</strong> {{ formatDate(event.eventData.date) }}</p>
+                <p><strong>Time:</strong> {{ event.eventData.time }}</p>
+                <p><strong>Location:</strong> {{ event.eventData.location }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

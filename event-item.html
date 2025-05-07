@@ -1,0 +1,49 @@
+<div class="event-item">
+    <div class="event-header">
+      <h3>{{ event.value.title }}</h3>
+      <div class="event-creator" v-if="isCreator">(Created by you)</div>
+    </div>
+    <div class="event-details">
+      <div class="event-info">
+        <div class="info-row"><strong>Date:</strong> {{ formattedDate }}</div>
+        <div class="info-row"><strong>Time:</strong> {{ formattedTime }}</div>
+        <div class="info-row"><strong>Location:</strong> {{ event.value.location }}</div>
+        <div class="info-row"><strong>Description:</strong> {{ event.value.description }}</div>
+        <div class="info-row">
+          <strong>Attendees:</strong> {{ attendeeCount }} / {{ event.value.maxAttendees }}
+        </div>
+      </div>
+      <div class="event-actions">
+        <button v-if="!isAttending && canRsvp" @click="rsvp" :disabled="loadingRsvp" class="rsvp-button">
+          {{ loadingRsvp ? 'Processing...' : 'RSVP' }}
+        </button>
+        <button v-if="isAttending" @click="cancelRsvp" :disabled="loadingRsvp" class="cancel-button">
+          {{ loadingRsvp ? 'Processing...' : 'Cancel RSVP' }}
+        </button>
+        
+        <div v-if="isFull && !isAttending" class="event-full-message">
+          This event is full
+        </div>
+        
+        <div v-if="isEventPast" class="event-past-message">
+          This event has already occurred
+        </div>
+      </div>
+    </div>
+    
+    <div class="attendees-section">
+      <button @click="toggleAttendeesList" class="toggle-attendees-button">
+        {{ showAttendees ? 'Hide Attendees' : 'Show Attendees' }}
+      </button>
+      
+      <div v-if="showAttendees" class="attendees-list">
+        <h4>People Attending:</h4>
+        <ul>
+          <li v-for="attendee in attendees" :key="attendee.userId">
+            {{ attendee.username || attendee.userId }}
+          </li>
+          <li v-if="attendees.length === 0">No attendees yet</li>
+        </ul>
+      </div>
+    </div>
+  </div>

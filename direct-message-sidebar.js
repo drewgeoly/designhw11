@@ -3,7 +3,7 @@ import { defineAsyncComponent } from "vue";
 export async function DirectMessageSidebar() {
   return {
     props: {
-      threads: { type: Array,  default: () => [] },
+      threads: { type: Array, default: () => [] },
       selectedThread: { type: Object, default: null },
       loading: { type: Boolean, default: false }
     },
@@ -13,8 +13,10 @@ export async function DirectMessageSidebar() {
 
       },
       create() {
-        const peer = prompt("Enter username to message:");
-        this.$emit("create-thread", peer);
+        const username = prompt("Enter username to message:");
+        if (username && username.trim()) { // check for usernames before sending
+          this.$emit("create-thread", username.trim());
+        }
       }
     },
     template: await fetch("./direct-message-sidebar.html").then(r => r.text())

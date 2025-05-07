@@ -3,6 +3,7 @@
   <div class="content">
     <graffiti-discover
       v-slot="{ objects: threadObjects }"
+      autopoll
       :channels="[$graffitiSession.value?.actor]"
       :schema="threadSchema"
       

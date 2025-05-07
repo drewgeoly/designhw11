@@ -23,7 +23,8 @@ export async function ChatView() {
         renameText: "",
         sending: false,
         loading: false,
-        editMode: false // Property to control edit mode
+        editMode: false, // Property to control edit mode
+        usernameCache: {}, // Cache usernames to avoid repeated lookups
       };
     },
     computed: {
@@ -50,6 +51,22 @@ export async function ChatView() {
             },
           },
         };
+      },
+      usernameSchema() { // new for usernames
+        return {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: {
+                type: { const: "username" },
+                username: { type: "string" },
+                actor: { type: "string" }
+              },
+              required: ["type", "username", "actor"]
+            }
+          }
+        };
       }
     },
     methods: {
@@ -72,37 +89,42 @@ export async function ChatView() {
       },
       
       async checkUsernameSet() {
-        const schema = {
-          type: "object",
-          properties: {
-            value: {
-              type: "object",
-              properties: {
-                type: { const: "username" },
-                username: { type: "string" },
-                actor: { type: "string" }
-            },
-              required: ["type", "username", "actor"]
-            }
-          }
-        };
         const actor = this.$graffitiSession.value?.actor;
-        const usernames = this.$graffiti.discover(["dgeolyUsernames"], schema);
-        
-        for await (const { object } of usernames) {
+        if (this.usernameCache[actor]) {
+          return true;
+        }
+        for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], this.usernameSchema)) {
           if (object.value.actor === actor) {
-            this.username = object.value.username;
+            this.usernameCache[actor] = object.value.username;
             return true;
           }
         }
         return false;
       },
       
+      async getUsernameFromActor(actorId) {
+        if (!actorId) {
+          return "Unknown";
+        } // first try cache tehehhe
+        if (this.usernameCache[actorId]) {
+          return this.usernameCache[actorId];
+        }
+        for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], this.usernameSchema)) {
+          if (object.value.actor === actorId) {
+            const username = object.value.username;
+            // Cache the result
+            this.usernameCache[actorId] = username;
+            return username;
+          }
+        }
+        return actorId;
+      },
       
       async sendMessage(session) {
         if (!this.myMessage.trim() || !this.channelId) {
           return;
         }
+        
         const hasUsername = await this.checkUsernameSet();
         if (!hasUsername) {
           alert("You must create a profile and username before messaging.");
@@ -113,15 +135,16 @@ export async function ChatView() {
         const me = session.actor || session.id;
         
         try {
-          // await this.delay(1000);
+          const senderName = await this.getUsernameFromActor(me);
+          
           await this.$graffiti.put(
             {
               value: {
                 type: "Message",
-                content: this.myMessage,
+                content:this.myMessage,
                 published: Date.now(),
                 publishedBy: me,
-                senderName : await this.getUsernameFromActor(me),
+                senderName: senderName,
               },
               channels: [this.channelId],
             },
@@ -206,31 +229,6 @@ export async function ChatView() {
         } finally {
           this.renaming = false;
         }
-
-      },
-      async getUsernameFromActor(actorId) {
-        if (!actorId){
-          return actorId;
-        }
-        const usernameSchema = {
-          type: "object",
-          properties: {
-            value: {
-              type: "object",
-              properties: {
-                type: { const: "username" },
-                actor: { const: actorId }
-              },
-              required: ["type", "username", "actor"]
-            }
-          }
-        };
-        
-        for await (const { object } of this.$graffiti.discover(["dgeolyUsernames"], usernameSchema)) {
-          return object.value.username;
-        }
-        
-        return actorId; // use actor id if i cant find
       },
       
       // For message styling

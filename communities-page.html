@@ -20,11 +20,29 @@
       </community-sidebar>
       
       <main>
+        <div class="community-tabs" v-if="selectedCommunity">
+          <button 
+            @click="activeTab = 'chat'" 
+            :class="{ active: activeTab === 'chat' }"
+          >
+            Chat
+          </button>
+          <button 
+            @click="activeTab = 'events'" 
+            :class="{ active: activeTab === 'events' }"
+          >
+            Events
+          </button>
+        </div>
         <chat-view
+          v-if="activeTab === 'chat' && selectedCommunity"
           :channel="selectedCommunity ? { ...selectedCommunity, isCommunity: true } : null"
           @channel-renamed="handleChannelRenamed"
-
         ></chat-view>
+        <event-view
+          v-if="activeTab === 'events' && selectedCommunity"
+          :community="selectedCommunity ? { ...selectedCommunity, isCommunity: true } : null"
+        ></event-view>
       </main>
     </div>
   </graffiti-discover>

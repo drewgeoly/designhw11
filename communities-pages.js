@@ -3,13 +3,15 @@ import { defineAsyncComponent } from "vue";
 import { NavBar } from "./nav-bar.js";
 import { CommunitySidebar } from "./community-sidebar.js";
 import { ChatView } from "./chat-view.js";
+import { EventView } from "./event-view.js"; 
 
 export async function CommunitiesPage() {
   return {
     components: {
       NavBar: defineAsyncComponent(NavBar),
       CommunitySidebar: defineAsyncComponent(CommunitySidebar),
-      ChatView: defineAsyncComponent(ChatView)
+      ChatView: defineAsyncComponent(ChatView),
+      EventView: defineAsyncComponent(EventView)
     },
     data() {
       return {
@@ -17,6 +19,7 @@ export async function CommunitiesPage() {
         loading: false,
         creating: false,
         joinedChannels: new Set(), // keep which communities the user has joined
+        activeTab: 'chat', // make chat first
         premadeCommunities: [
           { name: "Biking in Boston", channel: "premade:biking" },
           { name: "Monday Bowling", channel: "premade:bowling" },
@@ -95,7 +98,6 @@ export async function CommunitiesPage() {
       }
     },
     async mounted() {
-      
       if (this.$graffitiSession.value) {
 
         await this.processedCommunities([]);
@@ -122,7 +124,6 @@ export async function CommunitiesPage() {
       );
     },
     methods: {
-
       processedCommunities(communityObjects) {
 
         let communityMap = {};
@@ -167,7 +168,7 @@ export async function CommunitiesPage() {
         
         return communityArray;
       },
-      
+  
       async processRenames(communityMap) { 
         // this will be more helpful later when i let admin rename groups
         const renames = this.$graffiti.discover(["designftw"], this.renameSchema);
@@ -370,6 +371,7 @@ export async function CommunitiesPage() {
       
       enterCommunity(community) {
         this.selectedCommunity = community;
+        this.activeTab = 'chat'; // Reset to chat tab when switching communities
       },
       
       handleChannelRenamed(data) { // will be useful when i let admins rename groups
