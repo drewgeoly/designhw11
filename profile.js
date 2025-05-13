@@ -189,10 +189,10 @@ export async function Profile() {
 
           const profileObj = {
             value: vals,
-            channels: [actor, "designftw-2025-studio2"],
+            channels: [actor, "designftw-2025-studio1"],
           };
           await this.$graffiti.put(profileObj, session);
-          const existingUsername = await this.findUsernameObject(actor);
+          const existingUsername = await this.findUsernameObject(actor, this.user.username);
           
           if (existingUsername) {
             if (this.oldUsername !== this.user.username) {

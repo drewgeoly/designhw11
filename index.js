@@ -41,7 +41,8 @@ createApp({
     CommunitiesPage: defineAsyncComponent(() => import("./communities-pages.js")),
     Profile: defineAsyncComponent(() => import("./profile.js")),
     MessagesPage: defineAsyncComponent(() => import("./messages-page.js")),
-    MyRsvpsPage: defineAsyncComponent(() => import("./my-rsvps-page.js"))
+    MyRsvpsPage: defineAsyncComponent(() => import("./my-rsvps-page.js")),
+    // ProfileModal: defineAsyncComponent(() => import("./profile-modal.js"))
   },
 })
   .use(router)

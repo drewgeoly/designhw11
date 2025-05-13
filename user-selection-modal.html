@@ -1,0 +1,32 @@
+<div v-if="show" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Start a Conversation</h2>
+        <button class="close-button" @click="close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="search-container">
+          <input 
+            type="text" 
+            v-model="searchTerm" 
+            placeholder="Search users..." 
+            class="search-input"
+            autofocus
+          />
+        </div>
+        <div class="users-list">
+          <div v-if="filteredUsers.length === 0" class="no-users">
+            No users found matching your search
+          </div>
+          <div 
+            v-for="user in filteredUsers" 
+            :key="user.actor" 
+            class="user-item"
+            @click="selectUser(user)"
+          >
+            <span class="username">{{ user.username }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

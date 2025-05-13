@@ -3,16 +3,19 @@
   <div class="content">
     <graffiti-discover
       v-slot="{ objects: threadObjects }"
-      autopoll
+
       :channels="[$graffitiSession.value?.actor]"
       :schema="threadSchema"
       
     >
+    <!-- autopoll was added
+      -->
     <!-- sidebar is listening for any interactions -->
       <direct-message-sidebar 
         :threads="formatThreads(threadObjects)"
         :selected-thread="selectedThread"
         :loading="loading"
+        :users="formattedUsers"
         @select-thread="selectThread"
         @create-thread="createThread"
       ></direct-message-sidebar>

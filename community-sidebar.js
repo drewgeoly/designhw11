@@ -83,6 +83,7 @@ export async function CommunitySidebar() {
       },
       
       joinCommunity(community) {
+        if (confirm(`Do you want to join ${community.name}?`))
         this.$emit('join-community', community);
       },
       

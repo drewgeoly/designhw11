@@ -14,7 +14,7 @@
           <div v-if="!editMode" class="profile-view">
             <div class="profile-header">
               <h2>{{ user.name }}</h2>
-              <button @click="editMode = true" class="edit-button">Edit Profile</button>
+
             </div>
             
             <div v-if="!hasProfile" class="no-profile-message">
@@ -39,6 +39,10 @@
               <div class="info-item" v-if="user.status">
                 <div class="info-label">Status:</div>
                 <div class="info-content">{{ user.status }}</div>
+              </div>
+              <div class="info-item" v-if="user.interests">
+                <div class="info-label">Interests</div>
+                <div class="info-content">{{ user.interests }}</div>
               </div>
               
               
@@ -92,8 +96,10 @@
                 <button type="submit" class="save-button">Save Profile</button>
                 <button type="button" @click="cancelEdit" class="cancel-button">Cancel</button>
               </div>
+              
             </form>
           </div>
+          <button v-if="!editMode" @click="editMode = true" class="edit-button">Edit Profile</button>
         </div>
       </div>
     </div>

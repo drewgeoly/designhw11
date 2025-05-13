@@ -335,6 +335,7 @@ export async function CommunitiesPage() {
       },
       
       async loadJoinStatus() {
+        this.loading=true;
         try {
           this.joinedChannels.clear();
           const joins = this.$graffiti.discover(["designftw"], this.joinSchema);
@@ -366,6 +367,9 @@ export async function CommunitiesPage() {
           }
         } catch (error) {
           console.error("Error loading");
+          this.loading=false;
+        } finally{
+          this.loading=false;
         }
       },
       

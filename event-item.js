@@ -57,7 +57,7 @@ export async function EventItem() {
                 return eventDate < currentDate;
             },
             canRsvp() {
-                return !this.isEventPast && !this.isFull;
+                return !this.isEventPast && !this.isFull
             },
             rsvpSchema() {
                 return {
@@ -77,7 +77,7 @@ export async function EventItem() {
         async mounted() {
             if (this.$graffitiSession.value) {
                 await this.loadAttendees()
-                await this.checkRsvpStatus();
+                // await this.checkRsvpStatus();
             }
         },
         methods: {
@@ -137,18 +137,21 @@ export async function EventItem() {
             },
             
             async checkRsvpStatus() {
-                const me = this.$graffitiSession.value?.actor || this.$graffitiSession.value?.id;
+                const me = await this.$graffitiSession.value?.actor || this.$graffitiSession.value?.id;
                 for (const attendee of this.attendees) {
                     if (attendee.userId === me) {
                         this.isAttending = true;
-                        return;
+                        return true;
                     }
                 }
+
                 this.isAttending = false;
+                return false;
             },
             
             async loadAttendees() {
                 this.attendees = [];
+                this.loadingRsvp=true;
                 const rsvps = this.$graffiti.discover(["dgeolyEvents", this.communityId], this.rsvpSchema);
                 for await (const { object } of rsvps) {
                     if (object.value.eventId === this.event.url) {
@@ -162,12 +165,41 @@ export async function EventItem() {
                 }
                 
                 await this.checkRsvpStatus();
+                this.loadingRsvp=false;
             },
+            async postEventNotification(isJoining) {
+                try {
+                  const me = this.$graffitiSession.value.actor || this.$graffitiSession.value.id;
+                  const username = await this.getUsernameFromActor(me);
+                  const message = isJoining ? `${username} has RSVP'd to "${this.event.value.title}"`: `${username} has canceled their RSVP to "${this.event.value.title}"`;
+                  
+                  await this.$graffiti.put(
+                    {
+                      value: {
+                        type: "Message",
+                        content: message,
+                        published: Date.now(),
+                        publishedBy: "system",
+                        senderName: "Event Bot", 
+                        isSystemMessage: true,
+                      },
+                      channels: [this.communityId],
+                    },
+                    this.$graffitiSession.value
+                  );
+                } catch (error) {
+                }
+              },
+            
             
             async rsvp() { 
                 // first check for errors trying to rsvp
                 if (!this.$graffitiSession.value || !this.$graffitiSession.value.actor) {
                     alert("You must be logged in to RSVP.");
+                    return;
+                }
+                if (this.isAttending) {
+                    alert("You are already registered for this event.");
                     return;
                 }
                 
@@ -199,6 +231,7 @@ export async function EventItem() {
                     );
                     
                     await this.loadAttendees();
+                    await this.postEventNotification(true);
                 } catch (error) {
                     console.error("Error RSVPing to event:", error);
                     alert("Failed to RSVP. Please try again.");
@@ -226,6 +259,7 @@ export async function EventItem() {
                     if (myRsvpId) {
                         await this.$graffiti.delete(myRsvpId, this.$graffitiSession.value);
                         await this.loadAttendees();
+                        await this.postEventNotification(false);
                     }
                 } catch (error) {
                 } finally {

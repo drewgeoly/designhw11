@@ -10,4 +10,10 @@
         {{ thread.name }}
       </li>
     </ul>
+    <user-selection-modal
+    :show="showUserModal"
+    :users="users"
+    @select-user="handleUserSelect"
+    @close="showUserModal = false"
+  ></user-selection-modal>
   </div>

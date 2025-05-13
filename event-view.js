@@ -25,6 +25,8 @@ export async function EventView() {
                 showCreateForm: false, 
                 sending: false,
                 loading: false,
+                showProfileModal: false,
+                profileModalMessage: ""
             };
         },
         computed: {
@@ -111,7 +113,12 @@ export async function EventView() {
                 return false;
             },
 
-            toggleCreateForm() {
+            async toggleCreateForm() {
+                const hasUsername = await this.checkUsernameSet();
+                if (!hasUsername) {
+                    alert("You must create a profile and username before creating events.");
+                    return;
+                }
                 this.showCreateForm = !this.showCreateForm;
                 if (this.showCreateForm) {
                     // reset form

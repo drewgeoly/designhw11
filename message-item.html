@@ -1,4 +1,5 @@
-<li class="message" :class="isMine ? 'you' : 'them'">
+<li class="message" :class="[isMine ? 'you' : 'them', message.value.isSystemMessage ? 'system-message' : '']"> 
+  <!-- to add system messages ^ -->
   <template v-if="editingId === message.url">
     <input v-model="localEditText" :disabled="sending"/>
     <button @click="saveEdit" :disabled="sending">Save</button>

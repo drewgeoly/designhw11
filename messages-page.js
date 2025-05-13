@@ -38,6 +38,14 @@ export async function MessagesPage() {
           }
         };
       },
+      formattedUsers() {
+        return Object.entries(this.usernameToActorMap)
+          .filter(([username, actor]) => actor !== this.$graffitiSession.value?.actor)
+          .map(([username, actor]) => ({
+            username,
+            actor
+          }));
+      },
       usernameSchema() {
         return {
           type: "object",
@@ -98,22 +106,33 @@ export async function MessagesPage() {
         if (!threadObjects || !threadObjects.length || !this.$graffitiSession.value) {
           return [];
         }
+        
         const actor = this.$graffitiSession.value.actor;
-        return threadObjects.map(obj => {
+        //  a map to track unique conversations by participant ID
+        const uniqueThreadsByParticipant = new Map();
+      
+        threadObjects.forEach(obj => {
           const otherActor = obj.value.participants.find(p => p !== actor);
+          if (!otherActor) return;
           
-          if (!otherActor) {
-            return null; 
-          }
           const displayName = this.actorToUsernameMap[otherActor] || otherActor;
-          
-          return {
+          const thread = {
             channel: obj.value.channel,
             name: displayName,
             actorId: otherActor,
-            isCommunity: false
+            isCommunity: false,
+            //  timestamp if available to sort by most recent
+            timestamp: obj.value.timestamp || obj.timestamp || Date.now()
           };
-        }).filter(thread => thread !== null);
+          
+          // If we don't have this participant yet, or this thread is newer, use it
+          if (!uniqueThreadsByParticipant.has(otherActor) || 
+              thread.timestamp > uniqueThreadsByParticipant.get(otherActor).timestamp) {
+            uniqueThreadsByParticipant.set(otherActor, thread);
+          }
+        });
+        
+        return Array.from(uniqueThreadsByParticipant.values()).sort((a, b) => b.timestamp - a.timestamp);
       },
       
       async getActorIdFromUsername(username) {
@@ -174,7 +193,8 @@ export async function MessagesPage() {
               value: {
                 type: "ThreadCreated",
                 channel: channelId,
-                participants: participants
+                participants: participants,
+                timestamp: Date.now()
               },
               channels: [myActor, peerActorId]
             },

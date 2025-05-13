@@ -54,7 +54,6 @@
         <graffiti-discover
           v-slot="{ objects: eventObjects }"
           :channels="[community.channel, 'dgeolyEvents']"
-          autopoll
           :schema="eventSchema"
         >
           <div v-if="sortedEvents(eventObjects).length === 0" class="no-events">
@@ -84,9 +83,11 @@
       </div>
       
       <div class="navigation">
+        <!-- make it easy to go check RSVPs -->
         <router-link to="/my-rsvps" class="my-rsvps-link">
-          View My RSVPs
-        </router-link>
+          View My RSVPs 
+        </router-link> 
+
       </div>
     </div>
   </div>
